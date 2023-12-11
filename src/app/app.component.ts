@@ -21,8 +21,6 @@ export class AppComponent implements OnInit {
   public editCanvasUser: CanvasUser;
   public deleteCanvasUser: CanvasUser;
 
-  public addCanvasUser: CanvasUser;
-
   constructor(private canvasUserService: CanvasUserService){};
 
   ngOnInit() {
@@ -41,8 +39,21 @@ export class AppComponent implements OnInit {
   }
 
   public onAddCanvasUser(addForm: NgForm): void {
-    document.getElementById("add-canvasuser-form")?.click();
+    document.getElementById("add-canvasuser-form").click();
     this.canvasUserService.addCanvasUser(addForm.value).subscribe(
+      (response: CanvasUser) => {
+        console.log(response);
+        this.getCanvasUsers();
+        addForm.reset();
+      },
+      (error: HttpErrorResponse) => {
+        alert(error.message);
+      }
+    );
+  }
+
+  public onUpdateCanvasUser(canvasUser: CanvasUser): void {
+    this.canvasUserService.updateCanvasUser(canvasUser).subscribe(
       (response: CanvasUser) => {
         console.log(response);
         this.getCanvasUsers();
@@ -53,14 +64,37 @@ export class AppComponent implements OnInit {
     );
   }
 
-  public onUpdateCanvasUser(addForm: NgForm): void {
-    document.getElementById("add-canvasuser-form")?.click();
-    alert("Triggered udpate CanvasUser!");
+  public onDeleteCanvasUser(canvasUserId: number): void {
+    this.canvasUserService.deleteCanvasUser(canvasUserId).subscribe(
+      (response: void) => {
+        console.log(response);
+        this.getCanvasUsers()
+      },
+      (error: HttpErrorResponse) => {
+        alert(error.message);
+      }
+    );
   }
 
-  public onDeleteCanvasUser(addForm: NgForm): void {
-    document.getElementById("add-canvasuser-form")?.click();
-    alert("Triggered delete CanvasUser!");
+  public searchCanvasUsers(key: string): void {
+    const results: CanvasUser[] = [];
+    for (const canvasUser of this.canvasUsers) {
+      if (canvasUser.userName.toLowerCase().indexOf(key.toLowerCase()) !== -1
+        || canvasUser.jobTitle.toLowerCase().indexOf(key.toLowerCase()) !== -1
+        || canvasUser.company.toLowerCase().indexOf(key.toLowerCase()) !== -1 
+        || canvasUser.phoneNumber.toLowerCase().indexOf(key.toLowerCase()) !== -1
+        || canvasUser.email.toLowerCase().indexOf(key.toLowerCase()) !== -1) {
+        results.push(canvasUser);
+      }
+    }
+    this.canvasUsers = results;
+    if (results.length === 0 || !key) {
+      this.getCanvasUsers();
+    }
+    // if (results.length === 0 && key) {
+    //   document.getElementById('main-container').setAttribute("hidden", "true");
+    //   document.getElementById('emptyArray').setAttribute("hidden", "false");
+    // }
   }
 
   public onOpenModal(canvasUser: CanvasUser, mode: string): void {
@@ -70,7 +104,6 @@ export class AppComponent implements OnInit {
     button.style.display = 'none';
     button.setAttribute('data-toggle', 'modal');
     if (mode === 'add') {
-      this.addCanvasUser = canvasUser;
       button.setAttribute('data-target', '#addCanvasUserModal');
     }
     if (mode === 'edit') {
